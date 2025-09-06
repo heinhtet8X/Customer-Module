@@ -68,7 +68,7 @@ class AuthController extends Controller
         try {
             $this->authServices->register($registerRequest);
             DB::commit();
-            return jsonResponse(true, 'Account created successful', null, 200);
+            return jsonResponse(true, 'Please checkout your email box!', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return jsonResponse(false, $e->getMessage(), null, 400);

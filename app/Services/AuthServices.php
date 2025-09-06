@@ -39,10 +39,11 @@ class AuthServices
 
     public function register(Request $request)
     {
-        $existing = Customer::where(function ($query) use ($request) {
-            $query->where('username', $request->username)
-                ->orWhere('email', $request->email);
-        })
+        $existing = Customer::isActive()
+            ->where(function ($query) use ($request) {
+                $query->where('username', $request->username)
+                    ->orWhere('email', $request->email);
+            })
             ->first();
 
         if ($existing) {
@@ -56,15 +57,19 @@ class AuthServices
 
         $otp = rand(100000, 999999);
 
-        $customer = Customer::create([
-            'username'       => $request->username,
-            'first_name'     => $request->first_name,
-            'last_name'      => $request->last_name,
-            'email'          => $request->email,
-            'password'       => Hash::make($request->password),
-            'otp_code'       => $otp,
-            'otp_expires_at' => Carbon::now()->addMinutes(10),
-        ]);
+        $customer = Customer::updateOrCreate(
+            [
+                'email' => $request->email,
+            ],
+            [
+                'username'       => $request->username,
+                'first_name'     => $request->first_name,
+                'last_name'      => $request->last_name,
+                'password'       => Hash::make($request->password),
+                'otp_code'       => $otp,
+                'otp_expires_at' => Carbon::now()->addMinutes(10),
+            ],
+        );
 
         // Send OTP email
         Mail::to($customer->email)->send(new OTPVerificationMail($customer));
